@@ -1,0 +1,439 @@
+<html lang="it">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>EV Trip Planner – Standalone</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    :root { color-scheme: dark; }
+    body { background: #0b1220; color: #e5e7eb; }
+    .card { background: rgba(15, 23, 42, 0.6); border: 1px solid #1f2937; }
+    .muted { color: #94a3b8; }
+  </style>
+</head>
+<body>
+  <header class="sticky top-0 z-10 backdrop-blur bg-slate-950/70 border-b border-slate-800">
+    <div class="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
+      <h1 class="text-xl md:text-2xl font-semibold tracking-tight">EV Trip Planner</h1>
+      <span class="text-xs md:text-sm text-slate-400">Standalone • upload this file to GitHub Pages</span>
+    </div>
+  </header>
+
+  <main class="max-w-6xl mx-auto px-4 py-6 grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <!-- LEFT PANEL -->
+    <section class="lg:col-span-1 space-y-4">
+      <div class="card rounded-2xl p-4 shadow-lg">
+        <h2 class="text-lg font-semibold mb-3">Percorso</h2>
+        <div class="space-y-3">
+          <div>
+            <label class="text-sm">Partenza</label>
+            <div class="flex gap-2 mt-1">
+              <input id="startName" class="flex-1 bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-sm outline-none focus:border-violet-500" value="Otranto" />
+              <button id="btnLocStart" class="px-3 py-2 text-sm bg-slate-800 hover:bg-slate-700 rounded-xl">Usa posizione</button>
+            </div>
+            <div class="grid grid-cols-2 gap-2 mt-2">
+              <input id="startLat" type="number" step="0.0001" class="bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-sm" value="40.1483" />
+              <input id="startLon" type="number" step="0.0001" class="bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-sm" value="18.4869" />
+            </div>
+          </div>
+
+          <div>
+            <label class="text-sm">Arrivo</label>
+            <div class="flex gap-2 mt-1">
+              <input id="endName" class="flex-1 bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-sm" value="Valmontone" />
+            </div>
+            <div class="grid grid-cols-2 gap-2 mt-2">
+              <input id="endLat" type="number" step="0.0001" class="bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-sm" value="41.7751" />
+              <input id="endLon" type="number" step="0.0001" class="bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-sm" value="12.9153" />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card rounded-2xl p-4 shadow-lg">
+        <h2 class="text-lg font-semibold mb-3">Veicolo</h2>
+        <div class="grid grid-cols-2 gap-3">
+          <label class="text-sm">Batteria (kWh)
+            <input id="batteryKWh" type="number" class="w-full mt-1 bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-sm" value="60" />
+          </label>
+          <label class="text-sm">Autonomia dichiarata (km)
+            <input id="declaredRangeKm" type="number" class="w-full mt-1 bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-sm" value="400" />
+          </label>
+          <label class="text-sm">Fattore realismo (0.75–0.9)
+            <input id="realismFactor" type="number" step="0.01" min="0.5" max="1" class="w-full mt-1 bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-sm" value="0.8" />
+          </label>
+          <label class="text-sm">kW max auto (DC)
+            <input id="vehMaxDCkW" type="number" class="w-full mt-1 bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-sm" value="170" />
+          </label>
+          <label class="text-sm">SOC partenza (%)
+            <input id="startSocPct" type="number" min="5" max="100" class="w-full mt-1 bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-sm" value="100" />
+          </label>
+          <label class="text-sm">Target ricarica (%)
+            <input id="targetSocPct" type="number" min="40" max="90" class="w-full mt-1 bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-sm" value="70" />
+          </label>
+          <label class="text-sm">Riserva minima (%)
+            <input id="reservePct" type="number" min="5" max="30" class="w-full mt-1 bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-sm" value="15" />
+          </label>
+          <label class="text-sm">Consumo (Wh/km) (0=auto)
+            <input id="effWhPerKm" type="number" class="w-full mt-1 bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-sm" value="0" />
+          </label>
+          <label class="text-sm">Velocità media (km/h)
+            <input id="speedKmH" type="number" min="60" max="140" class="w-full mt-1 bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-sm" value="105" />
+          </label>
+          <label class="text-sm">Deviazione max (+min)
+            <input id="maxDeviationMin" type="number" min="0" max="20" class="w-full mt-1 bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-sm" value="6" />
+          </label>
+        </div>
+        <div class="mt-3 text-xs muted">
+          Autonomia reale stimata: <b id="autReal">—</b> • Range utile (prima tratta): <b id="rangeUseful">—</b>
+        </div>
+      </div>
+
+      <div class="card rounded-2xl p-4 shadow-lg">
+        <h2 class="text-lg font-semibold mb-3">Colonnine</h2>
+        <div class="grid grid-cols-1 gap-2 text-sm">
+          <label class="inline-flex items-center gap-2">
+            <input id="includeHPC" type="checkbox" checked />
+            <span>Includi HPC ≥150 kW</span>
+          </label>
+          <label class="inline-flex items-center gap-2">
+            <input id="includeFast" type="checkbox" checked />
+            <span>Includi Fast 100–149 kW</span>
+          </label>
+          <label class="inline-flex items-center gap-2">
+            <input id="filterPayNow" type="checkbox" />
+            <span>Solo pagamento immediato (carta/POS)</span>
+          </label>
+        </div>
+        <div class="mt-3 text-xs muted">Priorità reti: Tesla → IONITY → Ewiva → Enel X</div>
+        <button id="btnPlan" class="mt-4 w-full bg-violet-600 hover:bg-violet-500 rounded-xl py-2 text-sm font-medium">Calcola percorso</button>
+      </div>
+    </section>
+
+    <!-- RIGHT PANEL -->
+    <section class="lg:col-span-2 space-y-4">
+      <div class="card rounded-2xl p-4 shadow-lg">
+        <h2 class="text-lg font-semibold mb-3">Minimap</h2>
+        <div class="aspect-[3/1] bg-slate-950 border border-slate-800 rounded-xl relative overflow-hidden">
+          <svg id="miniRoute" class="absolute inset-0 w-full h-full"></svg>
+          <svg id="miniChargers" class="absolute inset-0 w-full h-full"></svg>
+        </div>
+        <p class="text-xs muted mt-2">Linea: rotta diretta per il calcolo del corridoio. Punti: stazioni (rosso Tesla, viola IONITY, azzurro altre).</p>
+      </div>
+
+      <div class="card rounded-2xl p-4 shadow-lg">
+        <h2 class="text-lg font-semibold mb-3">Itinerario ottimizzato (tempo)</h2>
+        <div id="errorBox" class="hidden mb-3 rounded-xl border border-red-500/40 bg-red-500/10 p-3 text-red-200 text-sm"></div>
+        <div id="summary" class="grid md:grid-cols-2 gap-4"></div>
+        <ol id="legs" class="mt-4 space-y-3"></ol>
+      </div>
+    </section>
+  </main>
+
+  <footer class="max-w-6xl mx-auto px-4 pb-8 text-center text-xs muted">
+    "Stima rapida" – tempi di ricarica approssimati con tapering semplificato. Integra le stazioni reali per maggiore precisione.
+  </footer>
+
+<script>
+// ------------ Data & Utils -------------
+const CHARGERS = [
+  { id: "tesla-brindisi", name: "Tesla SC Brindisi Ovest", net: "Tesla", kW: 250, lat: 40.6327, lon: 17.9366, payCard: true, type: "HPC" },
+  { id: "tesla-bari", name: "Tesla SC Bari", net: "Tesla", kW: 250, lat: 41.1171, lon: 16.8719, payCard: true, type: "HPC" },
+  { id: "tesla-foggia", name: "Tesla SC Foggia", net: "Tesla", kW: 250, lat: 41.4622, lon: 15.543, payCard: true, type: "HPC" },
+  { id: "tesla-termoli", name: "Tesla SC Termoli", net: "Tesla", kW: 250, lat: 42.004, lon: 14.989, payCard: true, type: "HPC" },
+  { id: "tesla-pescara", name: "Tesla SC Pescara", net: "Tesla", kW: 250, lat: 42.4645, lon: 14.214, payCard: true, type: "HPC" },
+  { id: "tesla-lanciano", name: "Tesla SC Val di Sangro (Lanciano)", net: "Tesla", kW: 250, lat: 42.208, lon: 14.442, payCard: true, type: "HPC" },
+  { id: "tesla-laquila", name: "Tesla SC L'Aquila", net: "Tesla", kW: 250, lat: 42.3512, lon: 13.3984, payCard: true, type: "HPC" },
+  { id: "tesla-ferentino", name: "Tesla SC Ferentino", net: "Tesla", kW: 250, lat: 41.6926, lon: 13.2567, payCard: true, type: "HPC" },
+
+  { id: "ionity-bari", name: "IONITY Bari (A14)", net: "IONITY", kW: 350, lat: 41.078, lon: 16.786, payCard: true, type: "HPC" },
+  { id: "ionity-foggia", name: "IONITY Foggia (A14)", net: "IONITY", kW: 350, lat: 41.478, lon: 15.571, payCard: true, type: "HPC" },
+  { id: "ionity-termoli", name: "IONITY Termoli (A14)", net: "IONITY", kW: 350, lat: 42.005, lon: 14.972, payCard: true, type: "HPC" },
+  { id: "ionity-pescara", name: "IONITY Pescara Ovest-Chieti", net: "IONITY", kW: 350, lat: 42.444, lon: 14.168, payCard: true, type: "HPC" },
+  { id: "ionity-lanciano", name: "IONITY Val di Sangro (Lanciano)", net: "IONITY", kW: 350, lat: 42.195, lon: 14.45, payCard: true, type: "HPC" },
+  { id: "ionity-valmontone", name: "IONITY Valmontone Outlet", net: "IONITY", kW: 350, lat: 41.7669, lon: 12.9137, payCard: true, type: "HPC" },
+
+  { id: "ewiva-bari", name: "Ewiva Bari (HPC)", net: "Ewiva", kW: 300, lat: 41.112, lon: 16.85, payCard: true, type: "HPC" },
+  { id: "enelx-foggia", name: "Enel X Foggia Fast", net: "Enel X", kW: 120, lat: 41.46, lon: 15.56, payCard: false, type: "FAST" },
+  { id: "ewiva-termoli", name: "Ewiva Termoli (HPC)", net: "Ewiva", kW: 300, lat: 42.0, lon: 14.99, payCard: true, type: "HPC" },
+  { id: "enelx-pescara", name: "Enel X Pescara Fast", net: "Enel X", kW: 150, lat: 42.46, lon: 14.21, payCard: false, type: "FAST" },
+  { id: "ewiva-ferentino", name: "Ewiva Ferentino (HPC)", net: "Ewiva", kW: 300, lat: 41.69, lon: 13.26, payCard: true, type: "HPC" },
+];
+
+const R = 6371;
+const toRad = (d) => (d * Math.PI) / 180;
+function haversine(a, b) {
+  const dLat = toRad(b.lat - a.lat);
+  const dLon = toRad(b.lon - a.lon);
+  const lat1 = toRad(a.lat);
+  const lat2 = toRad(b.lat);
+  const h = Math.sin(dLat / 2) ** 2 + Math.cos(lat1) * Math.cos(lat2) * Math.sin(dLon / 2) ** 2;
+  return 2 * R * Math.asin(Math.sqrt(h));
+}
+function projectPointFraction(A, B, P) {
+  const ax = A.lon, ay = A.lat;
+  const bx = B.lon, by = B.lat;
+  const px = P.lon, py = P.lat;
+  const abx = bx - ax, aby = by - ay;
+  const apx = px - ax, apy = py - ay;
+  const ab2 = abx * abx + aby * aby;
+  if (ab2 === 0) return { t: 0, offKm: haversine(A, P) };
+  const t = Math.max(0, Math.min(1, (apx * abx + apy * aby) / ab2));
+  const proj = { lon: ax + t * abx, lat: ay + t * aby };
+  const offKm = haversine(P, proj);
+  return { t, offKm };
+}
+function taperFactor(soc) {
+  if (soc < 50) return 0.9;
+  if (soc < 80) return 0.6;
+  return 0.25;
+}
+const fmtKm = (km) => `${km.toFixed(0)} km`;
+const fmtMin = (min) => { const h = Math.floor(min/60), m = Math.round(min%60); return h>0? `${h}h ${m}m` : `${m}m`; };
+
+function planTrip(settings, chargers) {
+  const {
+    origin, destination, batteryKWh, declaredRangeKm, realismFactor, reservePct, startSocPct,
+    targetSocPct, effWhPerKm, vehMaxDCkW, speedKmH, maxDeviationMin, includeTypes, filterPayNow, networkPriority
+  } = settings;
+
+  const autonomyReal = declaredRangeKm * realismFactor;
+  const effWh = effWhPerKm > 0 ? effWhPerKm : (batteryKWh * 1000) / autonomyReal;
+  const minArrivalKm = (reservePct / 100) * autonomyReal;
+  const corridorA = origin, corridorB = destination;
+
+  function deviationOk(site) {
+    const { offKm } = projectPointFraction(corridorA, corridorB, site);
+    const extraMin = (2 * offKm / speedKmH) * 60;
+    return extraMin <= maxDeviationMin;
+  }
+  function siteAllowed(site) {
+    if (filterPayNow && !site.payCard) return false;
+    if (site.type === "HPC" && includeTypes.HPC) return true;
+    if (site.type === "FAST" && includeTypes.FAST) return true;
+    return false;
+  }
+  function legMetrics(curr, pointB, currSocPct) {
+    const km = haversine(curr, pointB);
+    const driveMin = (km / speedKmH) * 60;
+    const usedKWh = (effWh * km) / 1000;
+    const arrivePct = Math.max(reservePct, currSocPct - (usedKWh / batteryKWh) * 100);
+    return { km, driveMin, arrivePct };
+  }
+  function netRank(net) { const i = networkPriority.indexOf(net); return i>=0? i: 999; }
+
+  let legs = [];
+  let curr = origin;
+  let currSocPct = startSocPct;
+  let safety = 0;
+
+  while (true) {
+    const distToDest = haversine(curr, destination);
+    const legKmCapacity = ((currSocPct / 100) * autonomyReal) - minArrivalKm;
+    const canReachDest = distToDest <= legKmCapacity + 2;
+    if (canReachDest) {
+      const last = legMetrics(curr, destination, currSocPct);
+      legs.push({ from: curr, to: {...destination, name: "Destinazione"}, km: last.km, driveMin: last.driveMin, arrivePct: last.arrivePct, chargeMin: 0, addPct: 0, stop: null });
+      break;
+    }
+    safety++; if (safety>30) throw new Error("Percorso non trovabile con i parametri attuali. Allarga deviazione o abilita più reti.");
+
+    const candidates = chargers
+      .filter(siteAllowed)
+      .filter(deviationOk)
+      .map((c) => ({ ...c, dCurr: haversine(curr, c), dDest: haversine(c, destination) }))
+      .filter((c) => c.dCurr <= legKmCapacity + 5);
+
+    if (!candidates.length) throw new Error("Nessuna colonnina raggiungibile rispettando la deviazione massima.");
+
+    candidates.sort((a,b)=> {
+      if (a.dCurr !== b.dCurr) return b.dCurr - a.dCurr;
+      if (a.kW !== b.kW) return b.kW - a.kW;
+      if (netRank(a.net) !== netRank(b.net)) return netRank(a.net) - netRank(b.net);
+      return a.dDest - b.dDest;
+    });
+
+    const pick = candidates[0];
+    const leg = legMetrics(curr, pick, currSocPct);
+    const arrivePct = leg.arrivePct;
+    const addPct = Math.max(0, targetSocPct - arrivePct);
+
+    let chargeMin = 0;
+    const step = 5;
+    for (let s = arrivePct; s < targetSocPct; s += step) {
+      const effPower = Math.min(pick.kW, vehMaxDCkW) * taperFactor(s);
+      const kWhThis = (Math.min(step, targetSocPct - s) / 100) * batteryKWh;
+      const minThis = (kWhThis / effPower) * 60;
+      chargeMin += minThis;
+    }
+
+    legs.push({ from: curr, to: { lat: pick.lat, lon: pick.lon, name: `${pick.name} • ${pick.net} ${pick.kW}kW`, id: pick.id }, km: leg.km, driveMin: leg.driveMin, arrivePct, chargeMin, addPct, stop: pick });
+    curr = { lat: pick.lat, lon: pick.lon, name: pick.name };
+    currSocPct = targetSocPct;
+  }
+
+  let kmTot = 0, driveTot = 0, chargeTot = 0, stops = 0;
+  for (const L of legs) { kmTot += L.km; driveTot += L.driveMin; chargeTot += L.chargeMin || 0; if (L.stop) stops++; }
+  return { legs, totals: { km: kmTot, driveMin: driveTot, chargeMin: chargeTot, stops }, autonomyReal };
+}
+
+// ------------ UI Logic -------------
+function qs(id){ return document.getElementById(id); }
+
+function updateAutonomy() {
+  const declared = Number(qs('declaredRangeKm').value);
+  const realism = Number(qs('realismFactor').value);
+  const start = Number(qs('startSocPct').value);
+  const reserve = Number(qs('reservePct').value);
+  const autReal = Math.round(declared * realism);
+  const rangeUseful = Math.round(autReal * (start/100) * (1 - reserve/100));
+  qs('autReal').textContent = autReal + ' km';
+  qs('rangeUseful').textContent = rangeUseful + ' km';
+}
+
+['declaredRangeKm','realismFactor','startSocPct','reservePct'].forEach(id => {
+  qs(id).addEventListener('input', updateAutonomy);
+});
+updateAutonomy();
+
+qs('btnLocStart').addEventListener('click', () => {
+  if (!navigator.geolocation) return alert('Geolocalizzazione non supportata');
+  navigator.geolocation.getCurrentPosition(
+    (pos) => {
+      qs('startName').value = 'La mia posizione';
+      qs('startLat').value = pos.coords.latitude.toFixed(5);
+      qs('startLon').value = pos.coords.longitude.toFixed(5);
+    },
+    () => alert('Impossibile ottenere la posizione'),
+    { enableHighAccuracy: true, timeout: 5000 }
+  );
+});
+
+function drawMinimap(origin, destination) {
+  const miniRoute = qs('miniRoute');
+  const miniChargers = qs('miniChargers');
+  miniRoute.innerHTML = ''; miniChargers.innerHTML = '';
+
+  const minLat = Math.min(origin.lat, destination.lat) - 1;
+  const maxLat = Math.max(origin.lat, destination.lat) + 1;
+  const minLon = Math.min(origin.lon, destination.lon) - 2;
+  const maxLon = Math.max(origin.lon, destination.lon) + 2;
+  const w = maxLon - minLon;
+  const h = maxLat - minLat;
+  const proj = (pt) => ({ x: ((pt.lon - minLon)/w)*100, y: (1 - (pt.lat - minLat)/h)*100 });
+
+  const a = proj(origin), b = proj(destination);
+  const L = document.createElementNS('http://www.w3.org/2000/svg','line');
+  L.setAttribute('x1', a.x+'%'); L.setAttribute('y1', a.y+'%');
+  L.setAttribute('x2', b.x+'%'); L.setAttribute('y2', b.y+'%');
+  L.setAttribute('stroke','currentColor'); L.setAttribute('stroke-width','2');
+  L.setAttribute('class','text-violet-500');
+  miniRoute.appendChild(L);
+
+  const ca = document.createElementNS('http://www.w3.org/2000/svg','circle');
+  ca.setAttribute('cx', a.x+'%'); ca.setAttribute('cy', a.y+'%'); ca.setAttribute('r','4'); ca.setAttribute('class','fill-emerald-400');
+  const cb = document.createElementNS('http://www.w3.org/2000/svg','circle');
+  cb.setAttribute('cx', b.x+'%'); cb.setAttribute('cy', b.y+'%'); cb.setAttribute('r','4'); cb.setAttribute('class','fill-orange-400');
+  miniRoute.appendChild(ca); miniRoute.appendChild(cb);
+
+  CHARGERS.forEach(c => {
+    const p = proj(c);
+    const dot = document.createElementNS('http://www.w3.org/2000/svg','circle');
+    dot.setAttribute('cx', p.x+'%'); dot.setAttribute('cy', p.y+'%'); dot.setAttribute('r','2.5');
+    const klass = c.net === 'Tesla' ? 'fill-red-400' : c.net === 'IONITY' ? 'fill-purple-400' : 'fill-sky-400';
+    dot.setAttribute('class', klass + ' opacity-70');
+    miniChargers.appendChild(dot);
+  });
+}
+
+function planAndRender() {
+  const settings = {
+    origin: { lat: Number(qs('startLat').value), lon: Number(qs('startLon').value), name: qs('startName').value || 'Partenza' },
+    destination: { lat: Number(qs('endLat').value), lon: Number(qs('endLon').value), name: qs('endName').value || 'Arrivo' },
+    batteryKWh: Number(qs('batteryKWh').value),
+    declaredRangeKm: Number(qs('declaredRangeKm').value),
+    realismFactor: Number(qs('realismFactor').value),
+    reservePct: Number(qs('reservePct').value),
+    startSocPct: Number(qs('startSocPct').value),
+    targetSocPct: Number(qs('targetSocPct').value),
+    effWhPerKm: Number(qs('effWhPerKm').value),
+    vehMaxDCkW: Number(qs('vehMaxDCkW').value),
+    speedKmH: Number(qs('speedKmH').value),
+    maxDeviationMin: Number(qs('maxDeviationMin').value),
+    includeTypes: { HPC: qs('includeHPC').checked, FAST: qs('includeFast').checked },
+    filterPayNow: qs('filterPayNow').checked,
+    networkPriority: ["Tesla","IONITY","Ewiva","Enel X","Other"]
+  };
+
+  const errorBox = qs('errorBox');
+  errorBox.classList.add('hidden'); errorBox.textContent='';
+
+  try {
+    const plan = planTrip(settings, CHARGERS);
+    drawMinimap(settings.origin, settings.destination);
+
+    // Summary
+    qs('summary').innerHTML = `
+      <div class="bg-slate-950 border border-slate-800 rounded-xl p-3">
+        <div class="text-sm muted">Riepilogo</div>
+        <div class="mt-2 text-sm">
+          <div>Km totali: <b>${fmtKm(plan.totals.km)}</b></div>
+          <div>Guida: <b>${fmtMin(plan.totals.driveMin)}</b></div>
+          <div>Ricariche: <b>${fmtMin(plan.totals.chargeMin)}</b></div>
+          <div>Soste: <b>${plan.totals.stops}</b></div>
+        </div>
+      </div>
+      <div class="bg-slate-950 border border-slate-800 rounded-xl p-3">
+        <div class="text-sm muted">Parametri auto</div>
+        <div class="mt-2 text-sm">
+          <div>Autonomia reale (stimata): <b>${Math.round(plan.autonomyReal)} km</b></div>
+          <div>Riserva minima: <b>${settings.reservePct}%</b></div>
+          <div>Target ricarica: <b>${settings.targetSocPct}%</b></div>
+          <div>Deviazione max: <b>+${settings.maxDeviationMin} min</b></div>
+        </div>
+      </div>
+    `;
+
+    // Legs
+    const legs = qs('legs'); legs.innerHTML='';
+    plan.legs.forEach((L,i) => {
+      const li = document.createElement('li');
+      li.className = 'bg-slate-950 border border-slate-800 rounded-xl p-3';
+      li.innerHTML = `
+        <div class="flex items-start justify-between gap-3">
+          <div>
+            <div class="font-medium">${L.from.name || 'Punto '+i} → ${L.to.name || 'Punto '+(i+1)}</div>
+            <div class="text-xs muted">${fmtKm(L.km)} • Guida ${fmtMin(L.driveMin)}</div>
+            <div class="text-xs muted mt-1">SOC arrivo: <b class="text-slate-200">${Math.round(L.arrivePct)}%</b></div>
+            ${L.stop ? `
+              <div class="mt-2 text-xs">
+                <div class="inline-flex items-center gap-2 rounded-lg bg-slate-800/60 px-2 py-1 border border-slate-700">
+                  <span class="text-slate-300">Ricarica</span>
+                  <span class="text-slate-200">+${Math.round(L.addPct)}%</span>
+                  <span class="text-slate-400">•</span>
+                  <span class="text-slate-300">${L.stop.net} ${L.stop.kW}kW</span>
+                  ${L.stop.payCard ? '<span class="text-emerald-300">POS</span>' : ''}
+                  <span class="text-slate-400">•</span>
+                  <span class="text-slate-300">${fmtMin(L.chargeMin)}</span>
+                </div>
+              </div>
+            `:''}
+          </div>
+          ${L.stop ? `<a class="text-xs px-3 py-2 rounded-lg border border-slate-700 bg-slate-800 hover:bg-slate-700" target="_blank" rel="noreferrer" href="https://www.google.com/maps/search/?api=1&query=${L.stop.lat},${L.stop.lon}">Apri in Maps</a>` : ''}
+        </div>
+      `;
+      legs.appendChild(li);
+    });
+  } catch (e) {
+    errorBox.textContent = e.message || String(e);
+    errorBox.classList.remove('hidden');
+  }
+}
+
+qs('btnPlan').addEventListener('click', planAndRender);
+
+// Initial draw
+drawMinimap({ lat: Number(qs('startLat').value), lon: Number(qs('startLon').value) }, { lat: Number(qs('endLat').value), lon: Number(qs('endLon').value) });
+</script>
+</body>
+</html>
